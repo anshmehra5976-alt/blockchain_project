@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BlockVerify - Ansh | CGC</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto 30px auto;
+    }
+
+    .box {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .box h3 {
+      margin-bottom: 14px;
+      color: #2c3e50;
+      font-size: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 6px;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+    }
+
+    button {
+      padding: 9px 18px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+
+    button:hover { background: #2980b9; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+
+    .result {
+      margin-top: 14px;
+      font-size: 0.82rem;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      padding: 12px;
+      display: none;
+    }
+
+    .result.show { display: block; }
+
+    .success { color: green; font-weight: bold; }
+    .error   { color: red;   font-weight: bold; }
+    .warning { color: orange; font-weight: bold; }
+
+    .hash {
+      word-break: break-all;
+      font-family: monospace;
+      font-size: 0.72rem;
+      background: #eee;
+      padding: 6px;
+      border-radius: 4px;
+      margin-top: 6px;
+    }
+
+    .qr-wrap {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .qr-wrap img {
+      width: 100px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .qr-wrap p {
+      font-size: 0.7rem;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    /* Chain section */
+    .chain-box {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .chain-box h3 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+
+    .chain-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      align-items: center;
+    }
+
+    .block {
+      border: 1px solid #3498db;
+      border-radius: 6px;
+      padding: 10px 12px;
+      width: 175px;
+      font-size: 0.7rem;
+      background: #eaf4fb;
+    }
+
+    .block.genesis {
+      border-color: #e67e22;
+      background: #fef5ec;
+    }
+
+    .block .bnum {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      font-size: 0.75rem;
+    }
+
+    .block .bhash  { color: #27ae60; font-family: monospace; word-break: break-all; }
+    .block .bprev  { color: #e74c3c; font-family: monospace; word-break: break-all; margin-top: 4px; }
+    .block .btime  { color: #999; margin-top: 4px; }
+    .block .blabel { color: #888; font-size: 0.65rem; margin-top: 3px; }
+
+    .arrow {
+      font-size: 1.4rem;
+      color: #3498db;
+      padding: 0 6px;
+    }
+
+    .chain-valid {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .cv-ok  { background: #eafaf1; color: green; border: 1px solid green; }
+    .cv-bad { background: #fdecea; color: red;   border: 1px solid red;   }
+
+    .refresh-btn {
+      margin-bottom: 14px;
+      background: #7f8c8d;
+      font-size: 0.8rem;
+      padding: 7px 14px;
+    }
+
+    .refresh-btn:hover { background: #636e72; }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    @media(max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>⛓️ BlockVerify</h1>
+<p class="subtitle">Blockchain Document Verification &nbsp;|&nbsp; Ansh &nbsp;|&nbsp; CGC Landran &nbsp;|&nbsp; B.Tech CSE</p>
+
+<div class="grid">
+
+  <!-- REGISTER -->
+  <div class="box">
+    <h3>Register Document</h3>
+    <input type="file" id="uploadFile" onchange="fileSelected('uploadFile', 'uploadBtn')"/>
+    <button id="uploadBtn" onclick="uploadDoc()" disabled>Register on Blockchain</button>
+    <div class="result" id="uploadResult"></div>
+  </div>
+
+  <!-- VERIFY -->
+  <div class="box">
+    <h3>Verify Document</h3>
+    <input type="file" id="verifyFile" onchange="fileSelected('verifyFile', 'verifyBtn')"/>
+    <button id="verifyBtn" onclick="verifyDoc()" disabled>Verify Document</button>
+    <div class="result" id="verifyResult"></div>
+  </div>
+
+</div>
+
+<!-- BLOCKCHAIN VISUALIZER -->
+<div class="chain-box">
+  <h3>Live Blockchain</h3>
+  <button class="refresh-btn" onclick="loadChain()">↻ Refresh Chain</button>
+  <div class="chain-wrap" id="chainWrap">
+    <p style="color:#aaa; font-size:0.8rem;">Loading...</p>
+  </div>
+  <div id="chainStatus"></div>
+</div>
+
+<footer>
+  Made by Ansh &nbsp;|&nbsp; CGC Landran &nbsp;|&nbsp; Blockchain for Web Security &amp; Decentralisation &nbsp;|&nbsp; 2024-25
+</footer>
+
+<script>
+  function fileSelected(inputId, btnId) {
+    const file = document.getElementById(inputId).files[0];
+    document.getElementById(btnId).disabled = !file;
+  }
+
+  function showLoading(boxId, msg) {
+    const box = document.getElementById(boxId);
+    box.classList.add('show');
+    box.innerHTML = `⏳ ${msg}`;
+  }
+
+  async function uploadDoc() {
+    const file = document.getElementById('uploadFile').files[0];
+    if (!file) return;
+    showLoading('uploadResult', 'Registering on blockchain...');
+    document.getElementById('uploadBtn').disabled = true;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res  = await fetch('/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      const box  = document.getElementById('uploadResult');
+      if (data.status === 'success') {
+        box.innerHTML = `
+          <div class="success">✅ Registered on Blockchain!</div>
+          <div>Block #${data.block_index} &nbsp;|&nbsp; ${data.timestamp}</div>
+          <div class="blabel">SHA-256 Hash:</div>
+          <div class="hash">${data.document_hash}</div>
+          <div class="blabel">Block Hash:</div>
+          <div class="hash">${data.block_hash}</div>
+          ${data.qr_code ? `<div class="qr-wrap"><img src="data:image/png;base64,${data.qr_code}"/><p>Blockchain Seal QR</p></div>` : ''}
+        `;
+      } else if (data.status === 'already_exists') {
+        box.innerHTML = `
+          <div class="warning">⚠️ Already registered at Block #${data.block_index}</div>
+          <div class="hash">${data.document_hash}</div>
+        `;
+      } else {
+        box.innerHTML = `<div class="error">Something went wrong.</div>`;
+      }
+      loadChain();
+    } catch(e) {
+      document.getElementById('uploadResult').innerHTML = `<div class="error">Server error.</div>`;
+    }
+    document.getElementById('uploadBtn').disabled = false;
+  }
+
+  async function verifyDoc() {
+    const file = document.getElementById('verifyFile').files[0];
+    if (!file) return;
+    showLoading('verifyResult', 'Scanning blockchain...');
+    document.getElementById('verifyBtn').disabled = true;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res  = await fetch('/verify', { method: 'POST', body: form });
+      const data = await res.json();
+      const box  = document.getElementById('verifyResult');
+      if (data.status === 'verified') {
+        box.innerHTML = `
+          <div class="success">✅ Document is AUTHENTIC</div>
+          <div>Found at Block #${data.block_index} &nbsp;|&nbsp; ${data.timestamp}</div>
+          <div>Chain integrity: <b>${data.chain_integrity ? '✔ Valid' : '✘ Compromised'}</b></div>
+          <div class="hash">${data.document_hash}</div>
+          ${data.qr_code ? `<div class="qr-wrap"><img src="data:image/png;base64,${data.qr_code}"/><p>Verified Seal</p></div>` : ''}
+        `;
+      } else {
+        box.innerHTML = `
+          <div class="error">❌ NOT FOUND / Possibly Tampered</div>
+          <div style="font-size:0.78rem; color:#888; margin-top:6px;">Document not found on blockchain.</div>
+          <div class="hash">${data.document_hash}</div>
+        `;
+      }
+    } catch(e) {
+      document.getElementById('verifyResult').innerHTML = `<div class="error">Server error.</div>`;
+    }
+    document.getElementById('verifyBtn').disabled = false;
+  }
+
+  async function loadChain() {
+    try {
+      const res  = await fetch('/chain');
+      const data = await res.json();
+      const wrap = document.getElementById('chainWrap');
+      wrap.innerHTML = '';
+      data.chain.forEach((block, i) => {
+        const dataStr = typeof block.data === 'object'
+          ? (block.data.filename || block.data.message || JSON.stringify(block.data).slice(0, 35))
+          : String(block.data).slice(0, 35);
+        const card = document.createElement('div');
+        card.className = 'block' + (block.index === 0 ? ' genesis' : '');
+        card.innerHTML = `
+          <div class="bnum">Block #${block.index} ${block.index === 0 ? '(Genesis)' : ''}</div>
+          <div class="blabel">Data:</div>
+          <div>${dataStr}</div>
+          <div class="blabel">Hash:</div>
+          <div class="bhash">${block.hash.slice(0, 18)}...</div>
+          <div class="blabel">Prev Hash:</div>
+          <div class="bprev">${block.previous_hash.slice(0, 18)}...</div>
+          <div class="btime">${block.timestamp}</div>
+        `;
+        wrap.appendChild(card);
+        if (i < data.chain.length - 1) {
+          const arr = document.createElement('div');
+          arr.className = 'arrow';
+          arr.textContent = '→';
+          wrap.appendChild(arr);
+        }
+      });
+      const statusDiv = document.getElementById('chainStatus');
+      statusDiv.innerHTML = `<span class="chain-valid ${data.is_valid ? 'cv-ok' : 'cv-bad'}">
+        ${data.is_valid ? '✔ Chain is Valid' : '✘ Chain Compromised'}
+      </span>`;
+    } catch(e) {
+      document.getElementById('chainWrap').innerHTML = `<span style="color:red">Could not load chain.</span>`;
+    }
+  }
+
+  loadChain();
+</script>
+</body>
+</html>
